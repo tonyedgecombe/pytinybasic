@@ -13,6 +13,8 @@ class Token:
     VARIABLE = 6
     RELOP = 7
     EOF = 8
+    EQUALS = 9
+    COMMA = 10
     
     type = UNKNOWN
     value = None
@@ -56,6 +58,10 @@ class Tokenizer:
             return self.getVariable()
         elif self.currentChar() == '<' or self.currentChar() == '>':
             return self.getRelativeOperator()
+        elif self.currentChar() == '=':
+            return self.getEquals()
+        elif self.currentChar() == ',':
+            return self.getComma()
 
         return Token()
 
@@ -140,6 +146,24 @@ class Tokenizer:
     def getEOF(self):
         token = Token()
         token.type = token.EOF
+
+        return token
+
+    def getEquals(self):
+        token = Token()
+        token.type = token.EQUALS
+        token.value = '='
+
+        self.pos += 1
+
+        return token
+
+    def getComma(self):
+        token = Token()
+        token.type = token.COMMA
+        token.value = ','
+
+        self.pos += 1
 
         return token
 
@@ -304,11 +328,48 @@ class TestTokeniser(TestCase):
         self.assertEqual('><', token.value)
 
 
-    def testeof(self):
+    def test_eof(self):
         tokenizer = Tokenizer()
         tokenizer.parse('')
 
         token = tokenizer.getNextToken()
         self.assertEqual(token.EOF, token.type)
+
+    def test_equals(self):
+        tokenizer = Tokenizer()
+        tokenizer.parse('LET A = 100')
+
+        token = tokenizer.getNextToken()
+        self.assertEqual(token.COMMAND, token.type)
+        self.assertEqual("LET", token.value)
+
+        token = tokenizer.getNextToken()
+        self.assertEqual(token.VARIABLE, token.type)
+        self.assertEqual("A", token.value)
+
+        token = tokenizer.getNextToken()
+        self.assertEqual(token.EQUALS, token.type)
+        self.assertEqual("=", token.value)
+
+        token = tokenizer.getNextToken()
+        self.assertEqual(token.NUMBER, token.type)
+        self.assertEqual(100, token.value)
+
+    def test_comma(self):
+        tokenizer = Tokenizer()
+        tokenizer.parse('A,B')
+
+        token = tokenizer.getNextToken()
+        self.assertEqual(token.VARIABLE, token.type)
+        self.assertEqual('A', token.value)
+
+        token = tokenizer.getNextToken()
+        self.assertEqual(token.COMMA, token.type)
+        self.assertEqual(',', token.value)
+
+        token = tokenizer.getNextToken()
+        self.assertEqual(token.VARIABLE, token.type)
+        self.assertEqual('B', token.value)
+
 
 
