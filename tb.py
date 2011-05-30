@@ -15,10 +15,10 @@ class Token:
     EOF = 8
     EQUALS = 9
     COMMA = 10
-    
-    type = UNKNOWN
-    value = None
-
+        
+    def __init__(self, type = UNKNOWN, value = None):
+        self.type = type
+        self.value = value
 
 
 class Tokenizer:
@@ -32,8 +32,8 @@ class Tokenizer:
     def nextChar(self):
         if self.pos + 1 < len(self.prog):
             return self.prog[self.pos + 1]
-
-        return None
+        else:
+            return None
 
     def eatWhiteSpace(self):
         while self.pos < len(self.prog) and self.currentChar().isspace():
@@ -43,32 +43,33 @@ class Tokenizer:
         self.eatWhiteSpace()
 
         if self.pos >= len(self.prog):
-            return self.getEOF()
-        elif self.currentChar().isdigit():
+            return Token(Token.EOF)
+
+        c = self.currentChar()
+
+        if c.isdigit():
             return self.getNumberToken()
-        elif self.currentChar() == '"':
+        elif c == '"':
             return self.getStringToken()
-        elif self.currentChar() == '+' or self.currentChar() == '-':
+        elif c == '+' or c == '-':
             return self.getOperator()
-        elif self.currentChar() == '*' or self.currentChar() == '/':
+        elif c == '*' or c == '/':
             return self.getMultOperator()
-        elif self.currentChar().isalpha() and self.nextChar() != None and self.nextChar().isalpha():
+        elif c.isalpha() and self.nextChar() != None and self.nextChar().isalpha():
             return self.getCommand()
-        elif self.currentChar().isalpha():
+        elif c.isalpha():
             return self.getVariable()
-        elif self.currentChar() == '<' or self.currentChar() == '>':
+        elif c == '<' or c == '>':
             return self.getRelativeOperator()
-        elif self.currentChar() == '=':
+        elif c == '=':
             return self.getEquals()
-        elif self.currentChar() == ',':
+        elif c == ',':
             return self.getComma()
 
         return Token()
 
     def getNumberToken(self):
-        token = Token()
-        token.type = token.NUMBER
-        token.value = 0
+        token = Token(Token.NUMBER, 0)
 
         while self.pos < len(self.prog) and self.currentChar().isdigit():
             token.value = token.value * 10 + int(self.currentChar())
@@ -77,9 +78,7 @@ class Tokenizer:
         return token
 
     def getStringToken(self):
-        token = Token()
-        token.type = token.STRING
-        token.value = ''
+        token = Token(Token.STRING, '')
 
         while self.pos < len(self.prog):
             self.pos += 1
@@ -93,27 +92,19 @@ class Tokenizer:
         raise Exception('String not terminated')
 
     def getOperator(self):
-        token = Token()
-        token.type = token.OPERATOR
-        token.value = self.currentChar()
-
+        token = Token(Token.OPERATOR, self.currentChar())
         self.pos += 1
 
         return token
 
     def getMultOperator(self):
-        token = Token()
-        token.type = token.MULTOPERATOR
-        token.value = self.currentChar()
-
+        token = Token(Token.MULTOPERATOR, self.currentChar())
         self.pos += 1
 
         return token
 
     def getCommand(self):
-        token = Token()
-        token.type = token.COMMAND
-        token.value = ''
+        token = Token(Token.COMMAND, '')
 
         while self.pos < len(self.prog) and self.currentChar().isalpha():
             token.value += self.currentChar()
@@ -122,18 +113,13 @@ class Tokenizer:
         return token
 
     def getVariable(self):
-        token = Token()
-        token.type = token.VARIABLE
-        token.value = self.currentChar()
-
+        token = Token(Token.VARIABLE, self.currentChar())
         self.pos += 1
 
         return token
 
     def getRelativeOperator(self):
-        token = Token()
-        token.type = token.RELOP
-        token.value = self.currentChar()
+        token = Token(Token.RELOP, self.currentChar())
 
         if self.pos + 1 < len(self.prog) and (self.nextChar() == '=' or self.nextChar() == '>' or self.nextChar() == '<'):
             token.value += self.nextChar()
@@ -143,30 +129,20 @@ class Tokenizer:
         
         return token
 
-    def getEOF(self):
-        token = Token()
-        token.type = token.EOF
-
-        return token
-
     def getEquals(self):
-        token = Token()
-        token.type = token.EQUALS
-        token.value = '='
-
+        token = Token(Token.EQUALS, '=')
         self.pos += 1
 
         return token
 
     def getComma(self):
-        token = Token()
-        token.type = token.COMMA
-        token.value = ','
-
+        token = Token(Token.COMMA, ',')
         self.pos += 1
 
         return token
 
+class Interpreter:
+    pass
 
 class TestTokeniser(TestCase):
     def test_number(self):
@@ -371,5 +347,6 @@ class TestTokeniser(TestCase):
         self.assertEqual(token.VARIABLE, token.type)
         self.assertEqual('B', token.value)
 
-
+class TestInterpreter(TestCase):
+    pass
 
