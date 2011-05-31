@@ -26,11 +26,55 @@ class Interpreter:
         if statement.type != Token.COMMAND:
             raise Exception('Line not a statement')
 
+        if statement.value == "LET":
+            self.stat_let(tokenizer)
+
+    def stat_let(self, tokenizer):
+        variable = tokenizer.getNextToken()
+        if variable.type != Token.VARIABLE:
+            raise Exception("Expected a variable")
+
+        if tokenizer.getNextToken().type != Token.EQUALS:
+            raise Exception("Expected an equals")
+
+        self.variables[variable.value] = self.match_expression(tokenizer)
+
     def match_expression(self, tokenizer):
-        pass
+        sign = 1
+        token = tokenizer.peekNextToken()
+        if token.type == Token.OPERATOR:
+            tokenizer.getNextToken()
+            if token.value == '-':
+                sign = -1
+
+        val = self.match_term(tokenizer)
+
+        while tokenizer.peekNextToken().type == Token.OPERATOR:
+            op = tokenizer.getNextToken()
+            right = self.match_term(tokenizer)
+
+            if op.value == '+':
+                val = val + right
+            else:
+                val = val - right
+
+        return sign * val
+
 
     def match_term(self, tokenizer):
-        pass
+        val = self.match_factor(tokenizer)
+
+        while tokenizer.peekNextToken().type == Token.MULTOPERATOR:
+            op = tokenizer.getNextToken()
+            right = self.match_factor(tokenizer)
+
+            if op.value == '*':
+                val = val * right
+            else:
+                val = val / right
+
+        return val
+
     
     def match_factor(self, tokenizer):
         factor = tokenizer.getNextToken()
@@ -64,17 +108,24 @@ class TestInterpreter(TestCase):
         self.assertEqual(2, len(interpreter.lines))
         self.assertEqual(' PRINT A', interpreter.lines[20])
 
-    def test_run(self):
+    def test_let(self):
         interpreter = Interpreter()
-        interpreter.run_line('LET B = 123')
-#        self.assertEqual(123, interpreter.variables['B'])
+        interpreter.run_line('LET B = 123 + 2')
+        self.assertEqual(125, interpreter.variables['B'])
+
+    def test_expression(self):
+        tokenizer = Tokenizer()
+        tokenizer.parse('2+3+4')
+        interpreter = Interpreter()
+
+        self.assertEqual(9, interpreter.match_expression(tokenizer))
 
     def test_match_term(self):
         tokenizer = Tokenizer()
-        tokenizer.parse('2*3')
+        tokenizer.parse('2*3*4')
         interpreter = Interpreter()
 
-        self.assertEqual(6, interpreter.match_term(tokenizer))
+        self.assertEqual(24, interpreter.match_term(tokenizer))
 
     def test_match_factor(self):
         tokenizer = Tokenizer()

@@ -67,6 +67,13 @@ class Tokenizer:
 
         return Token()
 
+    def peekNextToken(self):
+        pos = self.pos
+        token = self.getNextToken()
+        self.pos = pos
+        
+        return token
+
     def getNumberToken(self):
         token = Token(Token.NUMBER, 0)
 
@@ -158,6 +165,27 @@ class TestTokeniser(TestCase):
 
         self.assertEqual(token.STRING, token.type)
         self.assertEqual('ABC', token.value)
+
+    def test_peek_token(self):
+        tokenizer = Tokenizer()
+        tokenizer.parse('1+2')
+
+        token = tokenizer.getNextToken()
+        self.assertEqual(token.NUMBER, token.type)
+        self.assertEqual(1, token.value)
+
+        token = tokenizer.getNextToken()
+        self.assertEqual(token.OPERATOR, token.type)
+        self.assertEqual('+', token.value)
+
+        token = tokenizer.peekNextToken()
+        self.assertEqual(token.NUMBER, token.type)
+        self.assertEqual(2, token.value)
+
+        token = tokenizer.getNextToken()
+        self.assertEqual(token.NUMBER, token.type)
+        self.assertEqual(2, token.value)
+
 
     def test_operator(self):
         tokenizer = Tokenizer()
