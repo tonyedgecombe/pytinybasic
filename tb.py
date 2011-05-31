@@ -2,7 +2,6 @@ __author__ = 'Tony Edgecombe'
 
 from unittest.case import TestCase
 
-
 class Token:
     UNKNOWN = 0
     NUMBER = 1
@@ -141,8 +140,7 @@ class Tokenizer:
 
         return token
 
-class Interpreter:
-    pass
+
 
 class TestTokeniser(TestCase):
     def test_number(self):
@@ -346,7 +344,4 @@ class TestTokeniser(TestCase):
         token = tokenizer.getNextToken()
         self.assertEqual(token.VARIABLE, token.type)
         self.assertEqual('B', token.value)
-
-class TestInterpreter(TestCase):
-    pass
 
