@@ -11,12 +11,22 @@ class Interpreter:
         self.lines = {}
         self.variables = dict.fromkeys([x for x in string.ascii_uppercase], 0)
 
+    def run(self):
+        while True:
+            line = input('>')
+            self.interpret_line(line)
+
+
     def interpret_line(self, line):
         tokenizer = Tokenizer()
         tokenizer.parse(line)
 
         first_token = tokenizer.getNextToken()
-        self.lines[first_token.value] = tokenizer.prog[tokenizer.pos:]
+        if first_token.type == Token.NUMBER:
+            self.lines[int(first_token.value)] = tokenizer.prog[tokenizer.pos:]
+            self.sort_lines()
+        else:
+            self.run_line(line)
 
     def run_line(self, line):
         tokenizer = Tokenizer()
@@ -28,6 +38,12 @@ class Interpreter:
 
         if statement.value == "LET":
             self.stat_let(tokenizer)
+        elif statement.value == "PRINT":
+            self.stat_print(tokenizer)
+        elif statement.value == "LIST":
+            self.stat_list(tokenizer)
+        else:
+            raise Exception('Unrecognised statement: ' + statement.value)
 
     def stat_let(self, tokenizer):
         variable = tokenizer.getNextToken()
@@ -38,6 +54,16 @@ class Interpreter:
             raise Exception("Expected an equals")
 
         self.variables[variable.value] = self.match_expression(tokenizer)
+
+    def match_expression_list(self, tokenizer):
+        list = [self.match_expression(tokenizer)]
+
+        while tokenizer.peekNextToken().type == Token.COMMA:
+            tokenizer.getNextToken()
+            list.append(self.match_expression(tokenizer))
+
+        return list
+
 
     def match_expression(self, tokenizer):
         sign = 1
@@ -85,10 +111,19 @@ class Interpreter:
         else:
             raise Exception('Unexpected type for factor')
 
+    def stat_print(self, tokenizer):
+        list = self.match_expression_list(tokenizer)
+        for v in list:
+            print(v)
 
-    def run(self):
-        for line in sys.stdin:
-            self.interpret_line(line)
+    def stat_list(self, tokenizer):
+        for no, line in iter(self.lines.items()):
+            print(no, line,)
+
+    def sort_lines(self):
+        s = sorted(self.lines.items(), key=lambda x: x[0])
+        self.lines = dict(s)
+
 
 
 class TestInterpreter(TestCase):
@@ -113,9 +148,17 @@ class TestInterpreter(TestCase):
         interpreter.run_line('LET B = 123 + 2')
         self.assertEqual(125, interpreter.variables['B'])
 
+    def test_expression_list(self):
+        tokenizer = Tokenizer()
+        tokenizer.parse('2+3+2*2, 1+2, 3')
+        interpreter = Interpreter()
+
+        self.assertEqual([9,3,3], interpreter.match_expression_list(tokenizer))
+
+
     def test_expression(self):
         tokenizer = Tokenizer()
-        tokenizer.parse('2+3+4')
+        tokenizer.parse('2+3+2*2')
         interpreter = Interpreter()
 
         self.assertEqual(9, interpreter.match_expression(tokenizer))
@@ -142,5 +185,6 @@ class TestInterpreter(TestCase):
 
 
 if __name__ == '__main__':
+    print('Tiny Basic in Python')
     interp = Interpreter()
     interp.run()
