@@ -1,5 +1,4 @@
 import string
-import sys
 from unittest.case import TestCase
 from tb import Tokenizer, Token
 
@@ -14,7 +13,8 @@ class Interpreter:
     def run(self):
         while True:
             line = input('>')
-            self.interpret_line(line)
+            if len(line):
+                self.interpret_line(line)
 
 
     def interpret_line(self, line):
@@ -41,7 +41,9 @@ class Interpreter:
         elif statement.value == "PRINT":
             self.stat_print(tokenizer)
         elif statement.value == "LIST":
-            self.stat_list(tokenizer)
+            self.stat_list()
+        elif statement.value == "INPUT":
+            self.stat_input(tokenizer)
         else:
             raise Exception('Unrecognised statement: ' + statement.value)
 
@@ -54,6 +56,22 @@ class Interpreter:
             raise Exception("Expected an equals")
 
         self.variables[variable.value] = self.match_expression(tokenizer)
+
+    def match_var_list(self, tokenizer):
+        list = [self.match_var(tokenizer)]
+
+        while tokenizer.peekNextToken().type == Token.COMMA:
+            tokenizer.getNextToken()
+            list.append(self.match_var(tokenizer))
+
+        return list
+
+    def match_var(self, tokenizer):
+        token = tokenizer.getNextToken()
+        if token.type != Token.VARIABLE:
+            raise Exception("Expected a variable")
+
+        return token.value
 
     def match_expression_list(self, tokenizer):
         list = [self.match_expression(tokenizer)]
@@ -105,18 +123,17 @@ class Interpreter:
     def match_factor(self, tokenizer):
         factor = tokenizer.getNextToken()
         if factor.type == Token.NUMBER:
-            return factor.value
+            return int(factor.value)
         elif factor.type == Token.VARIABLE:
-            return self.variables[factor.value]
+            return int(self.variables[factor.value])
         else:
             raise Exception('Unexpected type for factor')
 
     def stat_print(self, tokenizer):
         list = self.match_expression_list(tokenizer)
-        for v in list:
-            print(v)
+        print(','.join([str(i) for i in list]))
 
-    def stat_list(self, tokenizer):
+    def stat_list(self):
         for no, line in iter(self.lines.items()):
             print(no, line,)
 
@@ -124,6 +141,10 @@ class Interpreter:
         s = sorted(self.lines.items(), key=lambda x: x[0])
         self.lines = dict(s)
 
+    def stat_input(self, tokenizer):
+        vars = self.match_var_list(tokenizer)
+        for var in vars:
+            self.variables[var] = input("?")
 
 
 class TestInterpreter(TestCase):
@@ -147,6 +168,14 @@ class TestInterpreter(TestCase):
         interpreter = Interpreter()
         interpreter.run_line('LET B = 123 + 2')
         self.assertEqual(125, interpreter.variables['B'])
+
+    def test_match_var_list(self):
+        tokenizer = Tokenizer()
+        tokenizer.parse('A, B, C')
+        interpreter = Interpreter()
+
+        self.assertEqual(['A', 'B', 'C'], interpreter.match_var_list(tokenizer))
+
 
     def test_expression_list(self):
         tokenizer = Tokenizer()
