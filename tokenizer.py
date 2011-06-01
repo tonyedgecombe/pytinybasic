@@ -1,4 +1,4 @@
-from unittest.case import TestCase
+from unittest import TestCase
 
 class Token:
     UNKNOWN = 0
@@ -148,226 +148,211 @@ class Tokenizer:
 
 
 class TestTokeniser(TestCase):
+    def setUp(self):
+        self.tokenizer = Tokenizer()
+
     def test_number(self):
-        tokenizer = Tokenizer()
-        tokenizer.parse('100')
-        token = tokenizer.getNextToken()
+        self.tokenizer.parse('100')
+        token = self.tokenizer.getNextToken()
 
         self.assertEqual(token.NUMBER, token.type)
         self.assertEqual(100, token.value)
 
     def test_string(self):
-        tokenizer = Tokenizer()
-        tokenizer.parse('"ABC"')
-        token = tokenizer.getNextToken()
+        self.tokenizer.parse('"ABC"')
+        token = self.tokenizer.getNextToken()
 
         self.assertEqual(token.STRING, token.type)
         self.assertEqual('ABC', token.value)
 
     def test_peek_token(self):
-        tokenizer = Tokenizer()
-        tokenizer.parse('1+2')
+        self.tokenizer.parse('1+2')
 
-        token = tokenizer.getNextToken()
+        token = self.tokenizer.getNextToken()
         self.assertEqual(token.NUMBER, token.type)
         self.assertEqual(1, token.value)
 
-        token = tokenizer.getNextToken()
+        token = self.tokenizer.getNextToken()
         self.assertEqual(token.OPERATOR, token.type)
         self.assertEqual('+', token.value)
 
-        token = tokenizer.peekNextToken()
+        token = self.tokenizer.peekNextToken()
         self.assertEqual(token.NUMBER, token.type)
         self.assertEqual(2, token.value)
 
-        token = tokenizer.getNextToken()
+        token = self.tokenizer.getNextToken()
         self.assertEqual(token.NUMBER, token.type)
         self.assertEqual(2, token.value)
 
 
     def test_operator(self):
-        tokenizer = Tokenizer()
-        tokenizer.parse('1+2-4')
+        self.tokenizer.parse('1+2-4')
 
-        token = tokenizer.getNextToken()
+        token = self.tokenizer.getNextToken()
         self.assertEqual(token.NUMBER, token.type)
         self.assertEqual(1, token.value)
 
-        token = tokenizer.getNextToken()
+        token = self.tokenizer.getNextToken()
         self.assertEqual(token.OPERATOR, token.type)
         self.assertEqual('+', token.value)
 
-        token = tokenizer.getNextToken()
+        token = self.tokenizer.getNextToken()
         self.assertEqual(token.NUMBER, token.type)
         self.assertEqual(2, token.value)
 
-        token = tokenizer.getNextToken()
+        token = self.tokenizer.getNextToken()
         self.assertEqual(token.OPERATOR, token.type)
         self.assertEqual('-', token.value)
 
-        token = tokenizer.getNextToken()
+        token = self.tokenizer.getNextToken()
         self.assertEqual(token.NUMBER, token.type)
         self.assertEqual(4, token.value)
 
     def test_operator2(self):
-        tokenizer = Tokenizer()
-        tokenizer.parse('"A"+"B"')
+        self.tokenizer.parse('"A"+"B"')
 
-        token = tokenizer.getNextToken()
+        token = self.tokenizer.getNextToken()
         self.assertEqual(token.STRING, token.type)
         self.assertEqual("A", token.value)
 
-        token = tokenizer.getNextToken()
+        token = self.tokenizer.getNextToken()
         self.assertEqual(token.OPERATOR, token.type)
         self.assertEqual('+', token.value)
 
-        token = tokenizer.getNextToken()
+        token = self.tokenizer.getNextToken()
         self.assertEqual(token.STRING, token.type)
         self.assertEqual("B", token.value)
 
     def test_mult_operator(self):
-        tokenizer = Tokenizer()
-        tokenizer.parse('2*3')
+        self.tokenizer.parse('2*3')
 
-        token = tokenizer.getNextToken()
+        token = self.tokenizer.getNextToken()
         self.assertEqual(token.NUMBER, token.type)
         self.assertEqual(2, token.value)
 
-        token = tokenizer.getNextToken()
+        token = self.tokenizer.getNextToken()
         self.assertEqual(token.MULTOPERATOR, token.type)
         self.assertEqual('*', token.value)
 
-        token = tokenizer.getNextToken()
+        token = self.tokenizer.getNextToken()
         self.assertEqual(token.NUMBER, token.type)
         self.assertEqual(3, token.value)
 
 
     def test_mult_operator2(self):
-        tokenizer = Tokenizer()
-        tokenizer.parse('2/3')
+        self.tokenizer.parse('2/3')
 
-        token = tokenizer.getNextToken()
+        token = self.tokenizer.getNextToken()
         self.assertEqual(token.NUMBER, token.type)
         self.assertEqual(2, token.value)
 
-        token = tokenizer.getNextToken()
+        token = self.tokenizer.getNextToken()
         self.assertEqual(token.MULTOPERATOR, token.type)
         self.assertEqual('/', token.value)
 
-        token = tokenizer.getNextToken()
+        token = self.tokenizer.getNextToken()
         self.assertEqual(token.NUMBER, token.type)
         self.assertEqual(3, token.value)
 
 
     def test_command(self):
-        tokenizer = Tokenizer()
-        tokenizer.parse('PRINT 100')
+        self.tokenizer.parse('PRINT 100')
 
-        token = tokenizer.getNextToken()
+        token = self.tokenizer.getNextToken()
         self.assertEqual(token.COMMAND, token.type)
         self.assertEqual("PRINT", token.value)
 
-        token = tokenizer.getNextToken()
+        token = self.tokenizer.getNextToken()
         self.assertEqual(token.NUMBER, token.type)
         self.assertEqual(100, token.value)
 
     def test_variable(self):
-        tokenizer = Tokenizer()
-        tokenizer.parse('D')
+        self.tokenizer.parse('D')
 
-        token = tokenizer.getNextToken()
+        token = self.tokenizer.getNextToken()
         self.assertEqual(token.VARIABLE, token.type)
         self.assertEqual('D', token.value)
 
     def test_relop_lessthan(self):
-        tokenizer = Tokenizer()
-        tokenizer.parse('<')
+        self.tokenizer.parse('<')
 
-        token = tokenizer.getNextToken()
+        token = self.tokenizer.getNextToken()
         self.assertEqual(token.RELOP, token.type)
         self.assertEqual('<', token.value)
 
     def test_relop_lessthanorequals(self):
-        tokenizer = Tokenizer()
-        tokenizer.parse('<=')
+        self.tokenizer.parse('<=')
 
-        token = tokenizer.getNextToken()
+        token = self.tokenizer.getNextToken()
         self.assertEqual(token.RELOP, token.type)
         self.assertEqual('<=', token.value)
 
     def test_relop_notequals(self):
-        tokenizer = Tokenizer()
-        tokenizer.parse('<>')
+        self.tokenizer.parse('<>')
 
-        token = tokenizer.getNextToken()
+        token = self.tokenizer.getNextToken()
         self.assertEqual(token.RELOP, token.type)
         self.assertEqual('<>', token.value)
 
     def test_relop_greater(self):
-        tokenizer = Tokenizer()
-        tokenizer.parse('>')
+        self.tokenizer.parse('>')
 
-        token = tokenizer.getNextToken()
+        token = self.tokenizer.getNextToken()
         self.assertEqual(token.RELOP, token.type)
         self.assertEqual('>', token.value)
 
     def test_relop_greateroreqials(self):
-        tokenizer = Tokenizer()
-        tokenizer.parse('>=')
+        self.tokenizer.parse('>=')
 
-        token = tokenizer.getNextToken()
+        token = self.tokenizer.getNextToken()
         self.assertEqual(token.RELOP, token.type)
         self.assertEqual('>=', token.value)
 
     def test_relop_notequals2(self):
-        tokenizer = Tokenizer()
-        tokenizer.parse('><')
+        self.tokenizer.parse('><')
 
-        token = tokenizer.getNextToken()
+        token = self.tokenizer.getNextToken()
         self.assertEqual(token.RELOP, token.type)
         self.assertEqual('><', token.value)
 
 
     def test_eof(self):
-        tokenizer = Tokenizer()
-        tokenizer.parse('')
+        self.tokenizer.parse('')
 
-        token = tokenizer.getNextToken()
+        token = self.tokenizer.getNextToken()
         self.assertEqual(token.EOF, token.type)
 
     def test_equals(self):
-        tokenizer = Tokenizer()
-        tokenizer.parse('LET A = 100')
+        self.tokenizer.parse('LET A = 100')
 
-        token = tokenizer.getNextToken()
+        token = self.tokenizer.getNextToken()
         self.assertEqual(token.COMMAND, token.type)
         self.assertEqual("LET", token.value)
 
-        token = tokenizer.getNextToken()
+        token = self.tokenizer.getNextToken()
         self.assertEqual(token.VARIABLE, token.type)
         self.assertEqual("A", token.value)
 
-        token = tokenizer.getNextToken()
+        token = self.tokenizer.getNextToken()
         self.assertEqual(token.EQUALS, token.type)
         self.assertEqual("=", token.value)
 
-        token = tokenizer.getNextToken()
+        token = self.tokenizer.getNextToken()
         self.assertEqual(token.NUMBER, token.type)
         self.assertEqual(100, token.value)
 
     def test_comma(self):
-        tokenizer = Tokenizer()
-        tokenizer.parse('A,B')
+        self.tokenizer.parse('A,B')
 
-        token = tokenizer.getNextToken()
+        token = self.tokenizer.getNextToken()
         self.assertEqual(token.VARIABLE, token.type)
         self.assertEqual('A', token.value)
 
-        token = tokenizer.getNextToken()
+        token = self.tokenizer.getNextToken()
         self.assertEqual(token.COMMA, token.type)
         self.assertEqual(',', token.value)
 
-        token = tokenizer.getNextToken()
+        token = self.tokenizer.getNextToken()
         self.assertEqual(token.VARIABLE, token.type)
         self.assertEqual('B', token.value)
 

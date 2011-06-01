@@ -3,7 +3,7 @@ from tokenizer import Tokenizer, Token
 
 import string
 from collections import OrderedDict
-from unittest.case import TestCase
+from unittest import TestCase
 
 class Interpreter:
     def __init__(self):
