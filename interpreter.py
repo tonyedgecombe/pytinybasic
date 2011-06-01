@@ -57,6 +57,36 @@ class Interpreter:
 
         self.variables[variable.value] = self.match_expression(tokenizer)
 
+    def match_relop(self, tokenizer):
+        left = tokenizer.getNextToken()
+        if left.type != Token.NUMBER:
+            raise Exception("Unexpected token in relative operation")
+
+        relop = tokenizer.peekNextToken()
+        if relop.type != Token.RELOP and relop.type != Token.EQUALS:
+            return left.value
+
+        tokenizer.getNextToken()
+        right = tokenizer.getNextToken()
+
+        if right.type != Token.NUMBER:
+            raise Exception("Unexpected token to right of relative operator")
+
+        if relop.value == '<':
+            return int(left.value < right.value)
+        elif relop.value == '>':
+            return int(left.value > right.value)
+        elif relop.value == '<=':
+            return int(left.value <= right.value)
+        elif relop.value == '>=':
+            return int(left.value >= right.value)
+        elif relop.value == '=':
+            return int(left.value == right.value)
+        elif relop.value == '<>' or relop.value == '><':
+            return int(left.value != right.value)
+        else:
+            raise Exception("Unimplemented relative operator: " + relop.value)
+
     def match_var_list(self, tokenizer):
         list = [self.match_var(tokenizer)]
 
@@ -175,6 +205,47 @@ class TestInterpreter(TestCase):
         interpreter = Interpreter()
 
         self.assertEqual(['A', 'B', 'C'], interpreter.match_var_list(tokenizer))
+
+
+    def test_match_relop(self):
+        tokenizer = Tokenizer()
+        interpreter = Interpreter()
+
+        tokenizer.parse("2 > 1")
+        self.assertEqual(1, interpreter.match_relop(tokenizer))
+
+        tokenizer.parse("2 < 1")
+        self.assertEqual(0, interpreter.match_relop(tokenizer))
+        
+        tokenizer.parse("2 <= 2")
+        self.assertEqual(1, interpreter.match_relop(tokenizer))
+
+        tokenizer.parse("2 <= 1")
+        self.assertEqual(0, interpreter.match_relop(tokenizer))
+
+        tokenizer.parse("2 >= 2")
+        self.assertEqual(1, interpreter.match_relop(tokenizer))
+
+        tokenizer.parse("2 >= 3")
+        self.assertEqual(0, interpreter.match_relop(tokenizer))
+
+        tokenizer.parse("2 = 2")
+        self.assertEqual(1, interpreter.match_relop(tokenizer))
+
+        tokenizer.parse("2 = 3")
+        self.assertEqual(0, interpreter.match_relop(tokenizer))
+
+        tokenizer.parse("2 <> 3")
+        self.assertEqual(1, interpreter.match_relop(tokenizer))
+
+        tokenizer.parse("2 <> 2")
+        self.assertEqual(0, interpreter.match_relop(tokenizer))
+
+        tokenizer.parse("2 >< 3")
+        self.assertEqual(1, interpreter.match_relop(tokenizer))
+
+        tokenizer.parse("2 >< 2")
+        self.assertEqual(0, interpreter.match_relop(tokenizer))
 
 
     def test_expression_list(self):
