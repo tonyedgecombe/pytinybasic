@@ -31,7 +31,9 @@ class Interpreter:
     def run_line(self, line):
         tokenizer = Tokenizer()
         tokenizer.parse(line)
-
+        self.run_statement(tokenizer)
+        
+    def run_statement(self, tokenizer):
         statement = tokenizer.getNextToken()
         if statement.type != Token.COMMAND:
             raise Exception('Line not a statement')
@@ -44,8 +46,12 @@ class Interpreter:
             self.stat_list()
         elif statement.value == "INPUT":
             self.stat_input(tokenizer)
+        elif statement.value == "IF":
+            self.stat_if(tokenizer)
         else:
             raise Exception('Unrecognised statement: ' + statement.value)
+
+
 
     def stat_let(self, tokenizer):
         variable = tokenizer.getNextToken()
@@ -176,6 +182,16 @@ class Interpreter:
         for var in vars:
             self.variables[var] = input("?")
 
+    def stat_if(self, tokenizer):
+        result = self.match_relop(tokenizer)
+
+        then = tokenizer.getNextToken()
+        if then.type != Token.COMMAND or then.value != "THEN":
+            raise Exception("Expected then after relative operator")
+
+        if result:
+            self.run_statement(tokenizer)
+
 
 class TestInterpreter(TestCase):
     def test_init(self):
@@ -198,6 +214,18 @@ class TestInterpreter(TestCase):
         interpreter = Interpreter()
         interpreter.run_line('LET B = 123 + 2')
         self.assertEqual(125, interpreter.variables['B'])
+
+    def test_if(self):
+        interpreter = Interpreter()
+
+        interpreter.run_line('IF 2 < 1 THEN LET C = 100')
+        self.assertEqual(0, interpreter.variables['C'])
+
+        interpreter.run_line('IF 2 > 1 THEN LET A = 100')
+        self.assertEqual(100, interpreter.variables['A'])
+
+        interpreter.run_line('IF 1 THEN LET B = 200')
+        self.assertEqual(200, interpreter.variables['B'])
 
     def test_match_var_list(self):
         tokenizer = Tokenizer()
