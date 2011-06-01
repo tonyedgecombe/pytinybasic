@@ -15,8 +15,7 @@ class Interpreter:
         self.stack = []
 
         self.variables = dict.fromkeys([x for x in string.ascii_uppercase], 0)
-        self.parser = Parser()
-        self.parser.set_variables(self.variables)
+        self.parser = Parser(self.variables)
 
     def interactive(self):
         while True:
@@ -44,21 +43,21 @@ class Interpreter:
     def execute_statement(self, tokenizer):
         statement = self.parser.match_statement(tokenizer)
 
-        if statement == "LET":
+        if statement == 'LET':
             self.stat_let(tokenizer)
-        elif statement == "PRINT":
+        elif statement == 'PRINT':
             self.stat_print(tokenizer)
-        elif statement == "LIST":
+        elif statement == 'LIST':
             self.stat_list()
-        elif statement == "INPUT":
+        elif statement == 'INPUT':
             self.stat_input(tokenizer)
-        elif statement == "IF":
+        elif statement == 'IF':
             self.stat_if(tokenizer)
-        elif statement == "RUN":
+        elif statement == 'RUN':
             self.run_program()
-        elif statement == "END":
+        elif statement == 'END':
             self.stat_end()
-        elif statement == "GOTO":
+        elif statement == 'GOTO':
             self.stat_goto(tokenizer)
         elif statement == 'GOSUB':
             self.stat_gosub(tokenizer)
@@ -91,7 +90,7 @@ class Interpreter:
             raise Exception("Expected a variable")
 
         if tokenizer.getNextToken().type != Token.EQUALS:
-            raise Exception("Expected an equals")
+            raise Exception('Expected an equals')
 
         self.parser.variables[variable.value] = self.parser.match_expression(tokenizer)
 
@@ -113,8 +112,8 @@ class Interpreter:
         result = self.parser.match_relop(tokenizer)
 
         then = tokenizer.getNextToken()
-        if then.type != Token.COMMAND or then.value != "THEN":
-            raise Exception("Expected then after relative operator")
+        if then.type != Token.COMMAND or then.value != 'THEN':
+            raise Exception('Expected then after relative operator')
 
         if result:
             self.execute_statement(tokenizer)

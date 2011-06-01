@@ -4,7 +4,7 @@ from unittest import TestCase
 from tokenizer import Token, Tokenizer
 
 class Parser:
-    def set_variables(self, variables):
+    def __init__(self, variables):
         self.variables = variables
 
     def match_statement(self, tokenizer):
@@ -126,8 +126,7 @@ class Parser:
 class TestParser(TestCase):
     def setUp(self):
         self.tokenizer = Tokenizer()
-        self.parser = Parser()
-        self.parser.set_variables(dict.fromkeys([x for x in string.ascii_uppercase], 0))
+        self.parser = Parser(dict.fromkeys([x for x in string.ascii_uppercase], 0))
 
     
     def test_match_var_list(self):
@@ -137,40 +136,40 @@ class TestParser(TestCase):
 
 
     def test_match_relop(self):
-        self.tokenizer.parse("2 > 1")
+        self.tokenizer.parse('2 > 1')
         self.assertEqual(1, self.parser.match_relop(self.tokenizer))
 
-        self.tokenizer.parse("2 < 1")
+        self.tokenizer.parse('2 < 1')
         self.assertEqual(0, self.parser.match_relop(self.tokenizer))
 
-        self.tokenizer.parse("2 <= 2")
+        self.tokenizer.parse('2 <= 2')
         self.assertEqual(1, self.parser.match_relop(self.tokenizer))
 
-        self.tokenizer.parse("2 <= 1")
+        self.tokenizer.parse('2 <= 1')
         self.assertEqual(0, self.parser.match_relop(self.tokenizer))
 
-        self.tokenizer.parse("2 >= 2")
+        self.tokenizer.parse('2 >= 2')
         self.assertEqual(1, self.parser.match_relop(self.tokenizer))
 
-        self.tokenizer.parse("2 >= 3")
+        self.tokenizer.parse('2 >= 3')
         self.assertEqual(0, self.parser.match_relop(self.tokenizer))
 
-        self.tokenizer.parse("2 = 2")
+        self.tokenizer.parse('2 = 2')
         self.assertEqual(1, self.parser.match_relop(self.tokenizer))
 
-        self.tokenizer.parse("2 = 3")
+        self.tokenizer.parse('2 = 3')
         self.assertEqual(0, self.parser.match_relop(self.tokenizer))
 
-        self.tokenizer.parse("2 <> 3")
+        self.tokenizer.parse('2 <> 3')
         self.assertEqual(1, self.parser.match_relop(self.tokenizer))
 
-        self.tokenizer.parse("2 <> 2")
+        self.tokenizer.parse('2 <> 2')
         self.assertEqual(0, self.parser.match_relop(self.tokenizer))
 
-        self.tokenizer.parse("2 >< 3")
+        self.tokenizer.parse('2 >< 3')
         self.assertEqual(1, self.parser.match_relop(self.tokenizer))
 
-        self.tokenizer.parse("2 >< 2")
+        self.tokenizer.parse('2 >< 2')
         self.assertEqual(0, self.parser.match_relop(self.tokenizer))
 
 

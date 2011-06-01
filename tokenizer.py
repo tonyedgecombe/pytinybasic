@@ -213,7 +213,7 @@ class TestTokeniser(TestCase):
 
         token = self.tokenizer.getNextToken()
         self.assertEqual(token.STRING, token.type)
-        self.assertEqual("A", token.value)
+        self.assertEqual('A', token.value)
 
         token = self.tokenizer.getNextToken()
         self.assertEqual(token.OPERATOR, token.type)
@@ -221,7 +221,7 @@ class TestTokeniser(TestCase):
 
         token = self.tokenizer.getNextToken()
         self.assertEqual(token.STRING, token.type)
-        self.assertEqual("B", token.value)
+        self.assertEqual('B', token.value)
 
     def test_mult_operator(self):
         self.tokenizer.parse('2*3')
@@ -260,7 +260,7 @@ class TestTokeniser(TestCase):
 
         token = self.tokenizer.getNextToken()
         self.assertEqual(token.COMMAND, token.type)
-        self.assertEqual("PRINT", token.value)
+        self.assertEqual('PRINT', token.value)
 
         token = self.tokenizer.getNextToken()
         self.assertEqual(token.NUMBER, token.type)
@@ -327,15 +327,15 @@ class TestTokeniser(TestCase):
 
         token = self.tokenizer.getNextToken()
         self.assertEqual(token.COMMAND, token.type)
-        self.assertEqual("LET", token.value)
+        self.assertEqual('LET', token.value)
 
         token = self.tokenizer.getNextToken()
         self.assertEqual(token.VARIABLE, token.type)
-        self.assertEqual("A", token.value)
+        self.assertEqual('A', token.value)
 
         token = self.tokenizer.getNextToken()
         self.assertEqual(token.EQUALS, token.type)
-        self.assertEqual("=", token.value)
+        self.assertEqual('=', token.value)
 
         token = self.tokenizer.getNextToken()
         self.assertEqual(token.NUMBER, token.type)
