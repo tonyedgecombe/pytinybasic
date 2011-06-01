@@ -56,6 +56,8 @@ class Interpreter:
             self.run_program()
         elif statement.value == "END":
             self.stat_end()
+        elif statement.value == "GOTO":
+            self.stat_goto(tokenizer)
         else:
             raise Exception('Unrecognised statement: ' + statement.value)
 
@@ -65,11 +67,7 @@ class Interpreter:
 
         self.sort_lines()
 
-        statements = {}
-        i = 0
-        for key, value in self.lines.items():
-            statements[i] = value
-            i += 1
+        statements = [x for x in self.lines.values()]
 
         while self.program_counter < len(statements) and self.running:
             statement = statements[self.program_counter]
@@ -82,32 +80,27 @@ class Interpreter:
 
 
     def match_relop(self, tokenizer):
-        left = tokenizer.getNextToken()
-        if left.type != Token.NUMBER:
-            raise Exception("Unexpected token in relative operation")
+        left = self.match_factor(tokenizer)
 
         relop = tokenizer.peekNextToken()
         if relop.type != Token.RELOP and relop.type != Token.EQUALS:
-            return left.value
+            return left
 
         tokenizer.getNextToken()
-        right = tokenizer.getNextToken()
-
-        if right.type != Token.NUMBER:
-            raise Exception("Unexpected token to right of relative operator")
+        right = self.match_factor(tokenizer)
 
         if relop.value == '<':
-            return int(left.value < right.value)
+            return int(left < right)
         elif relop.value == '>':
-            return int(left.value > right.value)
+            return int(left > right)
         elif relop.value == '<=':
-            return int(left.value <= right.value)
+            return int(left <= right)
         elif relop.value == '>=':
-            return int(left.value >= right.value)
+            return int(left >= right)
         elif relop.value == '=':
-            return int(left.value == right.value)
+            return int(left == right)
         elif relop.value == '<>' or relop.value == '><':
-            return int(left.value != right.value)
+            return int(left != right)
         else:
             raise Exception("Unimplemented relative operator: " + relop.value)
 
@@ -220,6 +213,13 @@ class Interpreter:
 
     def stat_end(self):
         self.running = False
+
+    def stat_goto(self, tokenizer):
+        line_number = self.match_expression(tokenizer)
+
+        self.sort_lines()
+        line_numbers = [x for x in self.lines.keys()]
+        self.program_counter = line_numbers.index(line_number) - 1
 
 
 class TestInterpreter(TestCase):
@@ -352,7 +352,19 @@ class TestInterpreter(TestCase):
 
         self.assertEqual(30, interpreter.variables['C'])
 
+    def test_goto(self):
+        interpreter = Interpreter()
 
+        interpreter.lines[10] = 'LET M = 1'
+        interpreter.lines[20] = 'LET I = 0'
+
+        interpreter.lines[30] = 'LET M = M * 2'
+        interpreter.lines[40] = 'LET I = I + 1'
+        interpreter.lines[50] = 'IF I < 8 THEN GOTO 30'
+
+        interpreter.run_program()
+
+        self.assertEqual(256, interpreter.variables['M'])
 
 
 if __name__ == '__main__':
