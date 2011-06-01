@@ -1,10 +1,9 @@
-from collections import OrderedDict
 import string
+from collections import OrderedDict
 from unittest.case import TestCase
-from tb import Tokenizer, Token
+from tokenizer import Tokenizer, Token
 
 __author__ = 'Tony Edgecombe'
-
 
 class Interpreter:
     def __init__(self):
@@ -40,29 +39,27 @@ class Interpreter:
         self.execute_statement(tokenizer)
         
     def execute_statement(self, tokenizer):
-        statement = tokenizer.getNextToken()
-        if statement.type != Token.COMMAND:
-            raise Exception('Line not a statement')
+        statement = self.match_statement(tokenizer)
 
-        if statement.value == "LET":
+        if statement == "LET":
             self.stat_let(tokenizer)
-        elif statement.value == "PRINT":
+        elif statement == "PRINT":
             self.stat_print(tokenizer)
-        elif statement.value == "LIST":
+        elif statement == "LIST":
             self.stat_list()
-        elif statement.value == "INPUT":
+        elif statement == "INPUT":
             self.stat_input(tokenizer)
-        elif statement.value == "IF":
+        elif statement == "IF":
             self.stat_if(tokenizer)
-        elif statement.value == "RUN":
+        elif statement == "RUN":
             self.run_program()
-        elif statement.value == "END":
+        elif statement == "END":
             self.stat_end()
-        elif statement.value == "GOTO":
+        elif statement == "GOTO":
             self.stat_goto(tokenizer)
-        elif statement.value == 'GOSUB':
+        elif statement == 'GOSUB':
             self.stat_gosub(tokenizer)
-        elif statement.value == 'RETURN':
+        elif statement == 'RETURN':
             self.stat_return()
         else:
             raise Exception('Unrecognised statement: ' + statement.value)
@@ -84,6 +81,12 @@ class Interpreter:
     def sort_lines(self):
         self.lines = OrderedDict(sorted(self.lines.items(), key=lambda x: x[0]))
 
+    def match_statement(self, tokenizer):
+        statement = tokenizer.getNextToken()
+        if statement.type != Token.COMMAND:
+            raise Exception('Line not a statement')
+
+        return statement.value
 
     def match_relop(self, tokenizer):
         left = self.match_factor(tokenizer)
@@ -251,6 +254,7 @@ class Interpreter:
 class TestInterpreter(TestCase):
     def setUp(self):
         self.interpreter = Interpreter()
+        self.tokenizer = Tokenizer()
 
     def test_init(self):
         self.assertEqual(26, len(self.interpreter.variables))
@@ -281,80 +285,73 @@ class TestInterpreter(TestCase):
         self.assertEqual(200, self.interpreter.variables['B'])
 
     def test_match_var_list(self):
-        tokenizer = Tokenizer()
-        tokenizer.parse('A, B, C')
+        self.tokenizer.parse('A, B, C')
 
-        self.assertEqual(['A', 'B', 'C'], self.interpreter.match_var_list(tokenizer))
+        self.assertEqual(['A', 'B', 'C'], self.interpreter.match_var_list(self.tokenizer))
 
 
     def test_match_relop(self):
-        tokenizer = Tokenizer()
+        self.tokenizer.parse("2 > 1")
+        self.assertEqual(1, self.interpreter.match_relop(self.tokenizer))
 
-        tokenizer.parse("2 > 1")
-        self.assertEqual(1, self.interpreter.match_relop(tokenizer))
-
-        tokenizer.parse("2 < 1")
-        self.assertEqual(0, self.interpreter.match_relop(tokenizer))
+        self.tokenizer.parse("2 < 1")
+        self.assertEqual(0, self.interpreter.match_relop(self.tokenizer))
         
-        tokenizer.parse("2 <= 2")
-        self.assertEqual(1, self.interpreter.match_relop(tokenizer))
+        self.tokenizer.parse("2 <= 2")
+        self.assertEqual(1, self.interpreter.match_relop(self.tokenizer))
 
-        tokenizer.parse("2 <= 1")
-        self.assertEqual(0, self.interpreter.match_relop(tokenizer))
+        self.tokenizer.parse("2 <= 1")
+        self.assertEqual(0, self.interpreter.match_relop(self.tokenizer))
 
-        tokenizer.parse("2 >= 2")
-        self.assertEqual(1, self.interpreter.match_relop(tokenizer))
+        self.tokenizer.parse("2 >= 2")
+        self.assertEqual(1, self.interpreter.match_relop(self.tokenizer))
 
-        tokenizer.parse("2 >= 3")
-        self.assertEqual(0, self.interpreter.match_relop(tokenizer))
+        self.tokenizer.parse("2 >= 3")
+        self.assertEqual(0, self.interpreter.match_relop(self.tokenizer))
 
-        tokenizer.parse("2 = 2")
-        self.assertEqual(1, self.interpreter.match_relop(tokenizer))
+        self.tokenizer.parse("2 = 2")
+        self.assertEqual(1, self.interpreter.match_relop(self.tokenizer))
 
-        tokenizer.parse("2 = 3")
-        self.assertEqual(0, self.interpreter.match_relop(tokenizer))
+        self.tokenizer.parse("2 = 3")
+        self.assertEqual(0, self.interpreter.match_relop(self.tokenizer))
 
-        tokenizer.parse("2 <> 3")
-        self.assertEqual(1, self.interpreter.match_relop(tokenizer))
+        self.tokenizer.parse("2 <> 3")
+        self.assertEqual(1, self.interpreter.match_relop(self.tokenizer))
 
-        tokenizer.parse("2 <> 2")
-        self.assertEqual(0, self.interpreter.match_relop(tokenizer))
+        self.tokenizer.parse("2 <> 2")
+        self.assertEqual(0, self.interpreter.match_relop(self.tokenizer))
 
-        tokenizer.parse("2 >< 3")
-        self.assertEqual(1, self.interpreter.match_relop(tokenizer))
+        self.tokenizer.parse("2 >< 3")
+        self.assertEqual(1, self.interpreter.match_relop(self.tokenizer))
 
-        tokenizer.parse("2 >< 2")
-        self.assertEqual(0, self.interpreter.match_relop(tokenizer))
+        self.tokenizer.parse("2 >< 2")
+        self.assertEqual(0, self.interpreter.match_relop(self.tokenizer))
 
 
     def test_expression_list(self):
-        tokenizer = Tokenizer()
-        tokenizer.parse('2+3+2*2, 1+2, 3, "abcd"')
+        self.tokenizer.parse('2+3+2*2, 1+2, 3, "abcd"')
 
-        self.assertEqual([9,3,3, 'abcd'], self.interpreter.match_expression_list(tokenizer))
+        self.assertEqual([9,3,3, 'abcd'], self.interpreter.match_expression_list(self.tokenizer))
 
 
     def test_expression(self):
-        tokenizer = Tokenizer()
-        tokenizer.parse('2+3+2*2')
+        self.tokenizer.parse('2+3+2*2')
 
-        self.assertEqual(9, self.interpreter.match_expression(tokenizer))
+        self.assertEqual(9, self.interpreter.match_expression(self.tokenizer))
 
     def test_match_term(self):
-        tokenizer = Tokenizer()
-        tokenizer.parse('2*3*4')
+        self.tokenizer.parse('2*3*4')
 
-        self.assertEqual(24, self.interpreter.match_term(tokenizer))
+        self.assertEqual(24, self.interpreter.match_term(self.tokenizer))
 
     def test_match_factor(self):
-        tokenizer = Tokenizer()
-        tokenizer.parse('123')
+        self.tokenizer.parse('123')
 
-        self.assertEqual(123, self.interpreter.match_factor(tokenizer))
+        self.assertEqual(123, self.interpreter.match_factor(self.tokenizer))
 
         self.interpreter.variables['A'] = 456
-        tokenizer.parse('A')
-        self.assertEqual(456, self.interpreter.match_factor(tokenizer))
+        self.tokenizer.parse('A')
+        self.assertEqual(456, self.interpreter.match_factor(self.tokenizer))
 
 
     def test_run_program(self):
