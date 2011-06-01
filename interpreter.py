@@ -1,3 +1,4 @@
+from collections import OrderedDict
 import string
 from unittest.case import TestCase
 from tb import Tokenizer, Token
@@ -11,6 +12,7 @@ class Interpreter:
         self.variables = dict.fromkeys([x for x in string.ascii_uppercase], 0)
 
         self.program_counter = 0
+        self.running = False
 
     def interactive(self):
         while True:
@@ -59,14 +61,25 @@ class Interpreter:
 
     def run_program(self):
         self.program_counter = 0
-        statements = [x for x in self.lines.values()]
+        self.running = True
 
-        while self.program_counter < len(statements):
+        self.sort_lines()
+
+        statements = {}
+        i = 0
+        for key, value in self.lines.items():
+            statements[i] = value
+            i += 1
+
+        while self.program_counter < len(statements) and self.running:
             statement = statements[self.program_counter]
 
             self.run_line(statement)
             self.program_counter += 1
         
+    def sort_lines(self):
+        self.lines = OrderedDict(sorted(self.lines.items(), key=lambda x: x[0]))
+
 
     def match_relop(self, tokenizer):
         left = tokenizer.getNextToken()
@@ -190,10 +203,6 @@ class Interpreter:
         for no, line in iter(self.lines.items()):
             print(no, line,)
 
-    def sort_lines(self):
-        s = sorted(self.lines.items(), key=lambda x: x[0])
-        self.lines = dict(s)
-
     def stat_input(self, tokenizer):
         vars = self.match_var_list(tokenizer)
         for var in vars:
@@ -210,7 +219,7 @@ class Interpreter:
             self.execute_statement(tokenizer)
 
     def stat_end(self):
-        pass
+        self.running = False
 
 
 class TestInterpreter(TestCase):
