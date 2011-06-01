@@ -14,6 +14,8 @@ class Interpreter:
         self.program_counter = 0
         self.running = False
 
+        self.stack = []
+
     def interactive(self):
         while True:
             line = input('>')
@@ -58,6 +60,10 @@ class Interpreter:
             self.stat_end()
         elif statement.value == "GOTO":
             self.stat_goto(tokenizer)
+        elif statement.value == 'GOSUB':
+            self.stat_gosub(tokenizer)
+        elif statement.value == 'RETURN':
+            self.stat_return()
         else:
             raise Exception('Unrecognised statement: ' + statement.value)
 
@@ -121,14 +127,27 @@ class Interpreter:
         return token.value
 
     def match_expression_list(self, tokenizer):
-        list = [self.match_expression(tokenizer)]
+        if tokenizer.peekNextToken().type == Token.STRING:
+            list = [self.match_string(tokenizer)]
+        else:
+            list = [self.match_expression(tokenizer)]
 
         while tokenizer.peekNextToken().type == Token.COMMA:
             tokenizer.getNextToken()
-            list.append(self.match_expression(tokenizer))
+
+            if tokenizer.peekNextToken().type == Token.STRING:
+                list.append(self.match_string(tokenizer))
+            else:
+                list.append(self.match_expression(tokenizer))
 
         return list
 
+    def match_string(self, tokenizer):
+        token = tokenizer.getNextToken()
+        if token.type != Token.STRING:
+            raise Exception("Not a string token")
+
+        return token.value
 
     def match_expression(self, tokenizer):
         sign = 1
@@ -221,6 +240,13 @@ class Interpreter:
         line_numbers = [x for x in self.lines.keys()]
         self.program_counter = line_numbers.index(line_number) - 1
 
+    def stat_gosub(self, tokenizer):
+        self.stack.append(self.program_counter)
+        self.stat_goto(tokenizer)
+
+    def stat_return(self):
+        self.program_counter = self.stack.pop()
+
 
 class TestInterpreter(TestCase):
     def test_init(self):
@@ -307,10 +333,10 @@ class TestInterpreter(TestCase):
 
     def test_expression_list(self):
         tokenizer = Tokenizer()
-        tokenizer.parse('2+3+2*2, 1+2, 3')
+        tokenizer.parse('2+3+2*2, 1+2, 3, "abcd"')
         interpreter = Interpreter()
 
-        self.assertEqual([9,3,3], interpreter.match_expression_list(tokenizer))
+        self.assertEqual([9,3,3, 'abcd'], interpreter.match_expression_list(tokenizer))
 
 
     def test_expression(self):
@@ -366,6 +392,22 @@ class TestInterpreter(TestCase):
 
         self.assertEqual(256, interpreter.variables['M'])
 
+    def test_gosub(self):
+        interpreter = Interpreter()
+
+        interpreter.lines[10] = 'LET M = 1'
+        interpreter.lines[20] = 'LET I = 0'
+
+        interpreter.lines[30] = 'GOSUB 70'
+        interpreter.lines[40] = 'LET I = I + 1'
+        interpreter.lines[50] = 'IF I < 8 THEN GOTO 30'
+        interpreter.lines[60] = 'END'
+        interpreter.lines[70] = 'LET M = M * 2'
+        interpreter.lines[80] = 'RETURN'
+
+        interpreter.run_program()
+
+        self.assertEqual(256, interpreter.variables['M'])
 
 if __name__ == '__main__':
     print('Tiny Basic in Python')
