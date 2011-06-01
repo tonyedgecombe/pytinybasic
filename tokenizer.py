@@ -1,5 +1,3 @@
-__author__ = 'Tony Edgecombe'
-
 from unittest.case import TestCase
 
 class Token:
