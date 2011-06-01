@@ -10,7 +10,9 @@ class Interpreter:
         self.lines = {}
         self.variables = dict.fromkeys([x for x in string.ascii_uppercase], 0)
 
-    def run(self):
+        self.program_counter = 0
+
+    def interactive(self):
         while True:
             line = input('>')
             if len(line):
@@ -31,9 +33,9 @@ class Interpreter:
     def run_line(self, line):
         tokenizer = Tokenizer()
         tokenizer.parse(line)
-        self.run_statement(tokenizer)
+        self.execute_statement(tokenizer)
         
-    def run_statement(self, tokenizer):
+    def execute_statement(self, tokenizer):
         statement = tokenizer.getNextToken()
         if statement.type != Token.COMMAND:
             raise Exception('Line not a statement')
@@ -48,20 +50,23 @@ class Interpreter:
             self.stat_input(tokenizer)
         elif statement.value == "IF":
             self.stat_if(tokenizer)
+        elif statement.value == "RUN":
+            self.run_program()
+        elif statement.value == "END":
+            self.stat_end()
         else:
             raise Exception('Unrecognised statement: ' + statement.value)
 
+    def run_program(self):
+        self.program_counter = 0
+        statements = [x for x in self.lines.values()]
 
+        while self.program_counter < len(statements):
+            statement = statements[self.program_counter]
 
-    def stat_let(self, tokenizer):
-        variable = tokenizer.getNextToken()
-        if variable.type != Token.VARIABLE:
-            raise Exception("Expected a variable")
-
-        if tokenizer.getNextToken().type != Token.EQUALS:
-            raise Exception("Expected an equals")
-
-        self.variables[variable.value] = self.match_expression(tokenizer)
+            self.run_line(statement)
+            self.program_counter += 1
+        
 
     def match_relop(self, tokenizer):
         left = tokenizer.getNextToken()
@@ -165,6 +170,18 @@ class Interpreter:
         else:
             raise Exception('Unexpected type for factor')
 
+
+    def stat_let(self, tokenizer):
+        variable = tokenizer.getNextToken()
+        if variable.type != Token.VARIABLE:
+            raise Exception("Expected a variable")
+
+        if tokenizer.getNextToken().type != Token.EQUALS:
+            raise Exception("Expected an equals")
+
+        self.variables[variable.value] = self.match_expression(tokenizer)
+
+
     def stat_print(self, tokenizer):
         list = self.match_expression_list(tokenizer)
         print(','.join([str(i) for i in list]))
@@ -190,7 +207,10 @@ class Interpreter:
             raise Exception("Expected then after relative operator")
 
         if result:
-            self.run_statement(tokenizer)
+            self.execute_statement(tokenizer)
+
+    def stat_end(self):
+        pass
 
 
 class TestInterpreter(TestCase):
@@ -310,9 +330,23 @@ class TestInterpreter(TestCase):
         self.assertEqual(456, interpreter.match_factor(tokenizer))
 
 
+    def test_run_program(self):
+        interpreter = Interpreter()
+
+        interpreter.lines[10] = 'LET A = 10'
+        interpreter.lines[20] = 'LET B = 20'
+        interpreter.lines[30] = 'LET C = A + B'
+        interpreter.lines[40] = 'END'
+        interpreter.lines[50] = 'LET C = 5'
+
+        interpreter.run_program()
+
+        self.assertEqual(30, interpreter.variables['C'])
+
+
 
 
 if __name__ == '__main__':
     print('Tiny Basic in Python')
     interp = Interpreter()
-    interp.run()
+    interp.interactive()

@@ -71,7 +71,7 @@ class Tokenizer:
         pos = self.pos
         token = self.getNextToken()
         self.pos = pos
-        
+
         return token
 
     def getNumberToken(self):
