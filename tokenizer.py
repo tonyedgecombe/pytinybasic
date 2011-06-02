@@ -12,6 +12,8 @@ class Token:
     EOF = 8
     EQUALS = 9
     COMMA = 10
+    LBRACKET = 11
+    RBRACKET = 12
         
     def __init__(self, type = UNKNOWN, value = None):
         self.type = type
@@ -62,6 +64,10 @@ class Tokenizer:
             return self.getEquals()
         elif c == ',':
             return self.getComma()
+        elif c == '(':
+            return self.getLeftBracket()
+        elif c == ')':
+            return self.getRightBracket()
 
         return Token()
 
@@ -145,6 +151,17 @@ class Tokenizer:
 
         return token
 
+    def getLeftBracket(self):
+        token = Token(Token.LBRACKET, '(')
+        self.pos += 1
+
+        return token
+
+    def getRightBracket(self):
+        token = Token(Token.RBRACKET, ')')
+        self.pos += 1
+
+        return token
 
 
 class TestTokeniser(TestCase):
@@ -355,4 +372,18 @@ class TestTokeniser(TestCase):
         token = self.tokenizer.getNextToken()
         self.assertEqual(token.VARIABLE, token.type)
         self.assertEqual('B', token.value)
+
+
+    def test_brackets(self):
+        self.tokenizer.parse('(100)')
+
+        token = self.tokenizer.getNextToken()
+        self.assertEqual(Token.LBRACKET, token.type)
+        self.assertEqual('(', token.value)
+
+        self.assertEqual(Token.NUMBER, self.tokenizer.getNextToken().type)
+
+        token = self.tokenizer.getNextToken()
+        self.assertEqual(Token.RBRACKET, token.type)
+        self.assertEqual(')', token.value)
 
