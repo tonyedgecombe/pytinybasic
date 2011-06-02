@@ -128,7 +128,7 @@ class Parser:
         result = self.match_expression(tokenizer)
 
         if tokenizer.getNextToken().type != Token.RBRACKET:
-            raise Exception('Expected closing bracket not ' + str(rbracket.type))
+            raise Exception('Expected closing bracket')
 
         return result
 
