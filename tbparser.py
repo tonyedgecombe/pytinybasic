@@ -119,8 +119,18 @@ class Parser:
             return int(factor.value)
         elif factor.type == Token.VARIABLE:
             return int(self.variables[factor.value])
+        elif factor.type == Token.LBRACKET:
+            return self.match_bracketed_expression(tokenizer)
         else:
             raise Exception('Unexpected type for factor')
+
+    def match_bracketed_expression(self, tokenizer):
+        result = self.match_expression(tokenizer)
+
+        if tokenizer.getNextToken().type != Token.RBRACKET:
+            raise Exception('Expected closing bracket not ' + str(rbracket.type))
+
+        return result
 
 
 class TestParser(TestCase):
@@ -196,3 +206,7 @@ class TestParser(TestCase):
         self.parser.variables['A'] = 456
         self.tokenizer.parse('A')
         self.assertEqual(456, self.parser.match_factor(self.tokenizer))
+
+    def test_match_brackets(self):
+        self.tokenizer.parse('(1 + 2) * (3 + 5)')
+        self.assertEqual(24, self.parser.match_expression(self.tokenizer))
