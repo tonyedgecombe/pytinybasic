@@ -1,7 +1,6 @@
 from tbparser import Parser
 from tokenizer import Tokenizer, Token
 
-import string
 from collections import OrderedDict
 from unittest import TestCase
 
@@ -14,7 +13,7 @@ class Interpreter:
 
         self.stack = []
 
-        self.variables = dict.fromkeys([x for x in string.ascii_uppercase], 0)
+        self.variables = {}
         self.parser = Parser(self.variables)
 
     def interactive(self):
@@ -141,8 +140,7 @@ class TestInterpreter(TestCase):
         self.interpreter = Interpreter()
 
     def test_init(self):
-        self.assertEqual(26, len(self.interpreter.parser.variables))
-        self.assertEqual(0, self.interpreter.parser.variables['A'])
+        self.assertEqual(0, self.interpreter.parser.variables.get('A', 0))
 
     def test_set_line(self):
         self.interpreter.interpret_line('10 LET A = 100')
@@ -160,7 +158,7 @@ class TestInterpreter(TestCase):
 
     def test_if(self):
         self.interpreter.run_line('IF 2 < 1 THEN LET C = 100')
-        self.assertEqual(0, self.interpreter.parser.variables['C'])
+        self.assertEqual(0, self.interpreter.parser.variables.get('C', 0))
 
         self.interpreter.run_line('IF 2 > 1 THEN LET A = 100')
         self.assertEqual(100, self.interpreter.parser.variables['A'])

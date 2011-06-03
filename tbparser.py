@@ -1,4 +1,3 @@
-import string
 from unittest import TestCase
 
 from tokenizer import Token, Tokenizer
@@ -118,7 +117,7 @@ class Parser:
         if factor.type == Token.NUMBER:
             return int(factor.value)
         elif factor.type == Token.VARIABLE:
-            return int(self.variables[factor.value])
+            return int(self.variables.get(factor.value, 0))
         elif factor.type == Token.LBRACKET:
             return self.match_bracketed_expression(tokenizer)
         else:
@@ -136,7 +135,7 @@ class Parser:
 class TestParser(TestCase):
     def setUp(self):
         self.tokenizer = Tokenizer()
-        self.parser = Parser(dict.fromkeys([x for x in string.ascii_uppercase], 0))
+        self.parser = Parser({})
 
     
     def test_match_var_list(self):
