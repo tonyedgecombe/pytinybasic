@@ -8,13 +8,14 @@ class Interpreter:
     def __init__(self):
         self.lines = {}
 
-        self.program_counter = 0
-        self.running = False
+        self._program_counter = 0
+        self._running = False
 
-        self.stack = []
+        self._stack = []
 
-        self.variables = {}
-        self.parser = Parser(self.variables)
+        self._variables = {}
+        self._parser = Parser(self._variables)
+
 
     def interactive(self):
         while True:
@@ -40,7 +41,7 @@ class Interpreter:
         self.execute_statement(tokenizer)
         
     def execute_statement(self, tokenizer):
-        statement = self.parser.match_statement(tokenizer)
+        statement = self._parser.match_statement(tokenizer)
 
         if statement == 'LET':
             self.stat_let(tokenizer)
@@ -66,18 +67,18 @@ class Interpreter:
             raise Exception('Unrecognised statement: ' + statement.value)
 
     def run_program(self):
-        self.program_counter = 0
-        self.running = True
+        self._program_counter = 0
+        self._running = True
 
         self.sort_lines()
 
         statements = [x for x in self.lines.values()]
 
-        while self.program_counter < len(statements) and self.running:
-            statement = statements[self.program_counter]
+        while self._program_counter < len(statements) and self._running:
+            statement = statements[self._program_counter]
 
             self.run_line(statement)
-            self.program_counter += 1
+            self._program_counter += 1
         
     def sort_lines(self):
         self.lines = OrderedDict(sorted(self.lines.items(), key=lambda x: x[0]))
@@ -91,11 +92,11 @@ class Interpreter:
         if tokenizer.getNextToken().type != Token.EQUALS:
             raise Exception('Expected an equals')
 
-        self.parser.variables[variable.value] = self.parser.match_expression(tokenizer)
+        self._parser._variables[variable.value] = self._parser.match_expression(tokenizer)
 
 
     def stat_print(self, tokenizer):
-        list = self.parser.match_expression_list(tokenizer)
+        list = self._parser.match_expression_list(tokenizer)
         print(','.join([str(i) for i in list]))
 
     def stat_list(self):
@@ -103,12 +104,12 @@ class Interpreter:
             print(no, line,)
 
     def stat_input(self, tokenizer):
-        vars = self.parser.match_var_list(tokenizer)
+        vars = self._parser.match_var_list(tokenizer)
         for var in vars:
-            self.parser.variables[var] = input("?")
+            self._parser._variables[var] = input("?")
 
     def stat_if(self, tokenizer):
-        result = self.parser.match_relop(tokenizer)
+        result = self._parser.match_relop(tokenizer)
 
         then = tokenizer.getNextToken()
         if then.type != Token.COMMAND or then.value != 'THEN':
@@ -118,21 +119,21 @@ class Interpreter:
             self.execute_statement(tokenizer)
 
     def stat_end(self):
-        self.running = False
+        self._running = False
 
     def stat_goto(self, tokenizer):
-        line_number = self.parser.match_expression(tokenizer)
+        line_number = self._parser.match_expression(tokenizer)
 
         self.sort_lines()
         line_numbers = [x for x in self.lines.keys()]
-        self.program_counter = line_numbers.index(line_number) - 1
+        self._program_counter = line_numbers.index(line_number) - 1
 
     def stat_gosub(self, tokenizer):
-        self.stack.append(self.program_counter)
+        self._stack.append(self._program_counter)
         self.stat_goto(tokenizer)
 
     def stat_return(self):
-        self.program_counter = self.stack.pop()
+        self._program_counter = self._stack.pop()
 
 
 class TestInterpreter(TestCase):
@@ -140,7 +141,7 @@ class TestInterpreter(TestCase):
         self.interpreter = Interpreter()
 
     def test_init(self):
-        self.assertEqual(0, self.interpreter.parser.variables.get('A', 0))
+        self.assertEqual(0, self.interpreter._parser._variables.get('A', 0))
 
     def test_set_line(self):
         self.interpreter.interpret_line('10 LET A = 100')
@@ -154,17 +155,17 @@ class TestInterpreter(TestCase):
 
     def test_let(self):
         self.interpreter.run_line('LET B = 123 + 2')
-        self.assertEqual(125, self.interpreter.parser.variables['B'])
+        self.assertEqual(125, self.interpreter._parser._variables['B'])
 
     def test_if(self):
         self.interpreter.run_line('IF 2 < 1 THEN LET C = 100')
-        self.assertEqual(0, self.interpreter.parser.variables.get('C', 0))
+        self.assertEqual(0, self.interpreter._parser._variables.get('C', 0))
 
         self.interpreter.run_line('IF 2 > 1 THEN LET A = 100')
-        self.assertEqual(100, self.interpreter.parser.variables['A'])
+        self.assertEqual(100, self.interpreter._parser._variables['A'])
 
         self.interpreter.run_line('IF 1 THEN LET B = 200')
-        self.assertEqual(200, self.interpreter.parser.variables['B'])
+        self.assertEqual(200, self.interpreter._parser._variables['B'])
 
     def test_run_program(self):
         self.interpreter.lines[10] = 'LET A = 10'
@@ -175,7 +176,7 @@ class TestInterpreter(TestCase):
 
         self.interpreter.run_program()
 
-        self.assertEqual(30, self.interpreter.parser.variables['C'])
+        self.assertEqual(30, self.interpreter._parser._variables['C'])
 
     def test_goto(self):
         self.interpreter.lines[10] = 'LET M = 1'
@@ -187,7 +188,7 @@ class TestInterpreter(TestCase):
 
         self.interpreter.run_program()
 
-        self.assertEqual(256, self.interpreter.parser.variables['M'])
+        self.assertEqual(256, self.interpreter._parser._variables['M'])
 
     def test_gosub(self):
         self.interpreter.lines[10] = 'LET M = 1'
@@ -202,7 +203,7 @@ class TestInterpreter(TestCase):
 
         self.interpreter.run_program()
 
-        self.assertEqual(256, self.interpreter.parser.variables['M'])
+        self.assertEqual(256, self.interpreter._parser._variables['M'])
 
 if __name__ == '__main__':
     print('Tiny Basic in Python')

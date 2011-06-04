@@ -4,7 +4,7 @@ from tokenizer import Token, Tokenizer
 
 class Parser:
     def __init__(self, variables):
-        self.variables = variables
+        self._variables = variables
 
     def match_statement(self, tokenizer):
         statement = tokenizer.getNextToken()
@@ -117,7 +117,7 @@ class Parser:
         if factor.type == Token.NUMBER:
             return int(factor.value)
         elif factor.type == Token.VARIABLE:
-            return int(self.variables.get(factor.value, 0))
+            return int(self._variables.get(factor.value, 0))
         elif factor.type == Token.LBRACKET:
             return self.match_bracketed_expression(tokenizer)
         else:
@@ -202,7 +202,7 @@ class TestParser(TestCase):
 
         self.assertEqual(123, self.parser.match_factor(self.tokenizer))
 
-        self.parser.variables['A'] = 456
+        self.parser._variables['A'] = 456
         self.tokenizer.parse('A')
         self.assertEqual(456, self.parser.match_factor(self.tokenizer))
 
