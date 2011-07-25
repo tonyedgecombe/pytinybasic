@@ -79,3 +79,9 @@ class TestParser(TestCase):
     def test_match_brackets(self):
         self.tokenizer.parse('(1 + 2) * (3 + 5)')
         self.assertEqual(24, self.parser.match_expression(self.tokenizer))
+
+    def test_left_associativity(self):
+        self.tokenizer.parse('10-2+2')
+
+        self.assertEqual(10, self.parser.match_term(self.tokenizer))
+
